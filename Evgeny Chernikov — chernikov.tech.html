@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<!-- saved from url=(0023)https://chernikov.tech/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script src="chrome-extension://fgddmllnllkalaagkghckoinaemmogpe/src/scripts/content/location-spoofing.js"></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evgeny Chernikov — chernikov.tech</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./Evgeny Chernikov — chernikov.tech_files/css2" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0b;
+            --bg-card: #111113;
+            --bg-hover: #1a1a1e;
+            --border: #222228;
+            --border-hover: #333340;
+            --text: #e8e8ed;
+            --text-muted: #7a7a88;
+            --text-dim: #55555f;
+            --accent: #e84142;
+            --accent-glow: rgba(232, 65, 66, 0.15);
+            --white: #ffffff;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .ambient {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.07;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ambient--red { background: var(--accent); top: -200px; right: -100px; }
+        .ambient--blue { background: #4466ff; bottom: -200px; left: -100px; }
+
+        .container { max-width: 720px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+        /* ──── NAV ──── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 16px 24px;
+            backdrop-filter: blur(20px) saturate(1.5);
+            -webkit-backdrop-filter: blur(20px) saturate(1.5);
+            background: rgba(10, 10, 11, 0.8);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        nav .nav-inner { max-width: 720px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px; font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            text-decoration: none;
+        }
+        .nav-logo span { color: var(--accent); }
+        .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+        .nav-links > li { position: relative; }
+        .nav-links > li > a {
+            font-size: 13px; font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            letter-spacing: 0.3px;
+            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .nav-links > li > a:hover { color: var(--text); }
+        .nav-links > li > a .chevron {
+            width: 12px; height: 12px;
+            transition: transform 0.2s;
+        }
+
+        /* ──── DROPDOWN ──── */
+        .dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            min-width: 280px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+        }
+        .nav-links > li:hover .dropdown,
+        .dropdown:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .nav-links > li:hover > a .chevron {
+            transform: rotate(180deg);
+        }
+        .dropdown__item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+        .dropdown__item:hover {
+            background: var(--bg-hover);
+        }
+        .dropdown__item--disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        .dropdown__item--disabled:hover {
+            background: transparent;
+        }
+        .dropdown__icon {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+        .dropdown__info { min-width: 0; }
+        .dropdown__name {
+            font-size: 13px; font-weight: 600; color: var(--text);
+            margin-bottom: 1px;
+        }
+        .dropdown__desc {
+            font-size: 11px; color: var(--text-dim);
+        }
+        .dropdown__badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--accent);
+            border: 1px solid rgba(232, 65, 66, 0.3);
+            border-radius: 100px;
+            padding: 2px 7px;
+            margin-left: auto;
+            flex-shrink: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ──── HERO ──── */
+        .hero { padding: 160px 0 80px; animation: fadeUp 0.8s ease both; }
+        .hero__label {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; color: var(--accent);
+            letter-spacing: 1.5px; text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+        .hero__label::before {
+            content: ''; width: 8px; height: 8px;
+            background: var(--accent); border-radius: 50%;
+            animation: pulse 2s ease infinite;
+        }
+        .hero__name {
+            font-family: 'DM Sans', sans-serif;
+            font-size: clamp(42px, 8vw, 64px);
+            font-weight: 700; line-height: 1.1;
+            color: var(--white); margin-bottom: 36px;
+        }
+
+        /* ──── CONTACT ROW ──── */
+        .contact-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 32px; }
+        .contact-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 20px; background: transparent;
+            border: 1px solid var(--border); border-radius: 100px;
+            color: var(--text); font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 600;
+            text-decoration: none; cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .contact-btn:hover { border-color: var(--accent); background: var(--accent-glow); color: var(--white); }
+        .contact-btn--primary { background: var(--accent); border-color: var(--accent); color: var(--white); }
+        .contact-btn--primary:hover { background: #d63637; box-shadow: 0 0 30px var(--accent-glow); }
+        .contact-btn svg { width: 16px; height: 16px; }
+
+        .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 60px 0; }
+
+        /* ──── SECTION ──── */
+        .section { margin-bottom: 60px; animation: fadeUp 0.8s ease both; }
+        .section__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .section__title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; font-weight: 500;
+            color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase;
+        }
+        .section__count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: var(--text-dim);
+            padding: 4px 10px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 100px;
+        }
+
+        /* ──── FOCUS AREAS ──── */
+        .focus-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .focus-card {
+            padding: 20px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            transition: all 0.3s ease;
+        }
+        .focus-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+        .focus-card__icon { font-size: 22px; margin-bottom: 12px; }
+        .focus-card__title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+        .focus-card__desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+        /* ──── SOLUTION CARDS ──── */
+        .demo-list { display: flex; flex-direction: column; gap: 8px; }
+        .demo-card {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 22px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            text-decoration: none; transition: all 0.3s ease;
+            cursor: pointer; gap: 16px;
+        }
+        .demo-card:hover {
+            border-color: var(--accent); background: var(--bg-hover);
+            transform: translateX(4px); box-shadow: -4px 0 0 var(--accent);
+        }
+        .demo-card--disabled { cursor: default; opacity: 0.6; }
+        .demo-card--disabled:hover { border-color: var(--border); background: var(--bg-card); transform: none; box-shadow: none; }
+        .demo-card__left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+        .demo-card__icon {
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 18px; flex-shrink: 0;
+        }
+        .demo-card__info { min-width: 0; }
+        .demo-card__name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+        .demo-card__desc { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .demo-card__right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .demo-card__tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; color: var(--text-dim);
+            padding: 4px 10px; border: 1px solid var(--border);
+            border-radius: 100px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .demo-card__tag--soon { color: var(--accent); border-color: rgba(232, 65, 66, 0.3); }
+        .demo-card__arrow { color: var(--text-dim); transition: all 0.2s; }
+        .demo-card:hover .demo-card__arrow { color: var(--accent); transform: translateX(4px); }
+        .demo-card--disabled:hover .demo-card__arrow { color: var(--text-dim); transform: none; }
+
+        footer { padding: 40px 0 60px; text-align: center; }
+        footer p { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
+        footer a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        footer a:hover { color: var(--accent); }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .section:nth-child(2) { animation-delay: 0.15s; }
+        .section:nth-child(3) { animation-delay: 0.3s; }
+
+        @media (max-width: 600px) {
+            .hero { padding: 120px 0 60px; }
+            .focus-grid { grid-template-columns: 1fr; }
+            .nav-links { gap: 16px; }
+            .contact-row { flex-direction: column; }
+            .contact-btn { justify-content: center; }
+            .demo-card__tag { display: none; }
+            .dropdown { min-width: 240px; right: -60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient ambient--red"></div>
+    <div class="ambient ambient--blue"></div>
+
+    <nav style="padding: 16px 24px;">
+        <div class="nav-inner">
+            <a href="https://chernikov.tech/#" class="nav-logo"><span>chernikov</span>.tech</a>
+            <ul class="nav-links">
+                <li><a href="https://chernikov.tech/#about">About</a></li>
+                <li>
+                    <a href="https://chernikov.tech/#solutions">
+                        Solutions
+                        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </a>
+                    <div class="dropdown">
+                        <a href="https://zesco-demo.chernikov.tech/" target="_blank" class="dropdown__item">
+                            <div class="dropdown__icon">⚡</div>
+                            <div class="dropdown__info">
+                                <div class="dropdown__name">ZESCO Demo</div>
+                                <div class="dropdown__desc">Utility management platform</div>
+                            </div>
+                        </a>
+                        <a href="https://ultimate-e-grocery-modelling-tool.chernikov.tech/" target="_blank" class="dropdown__item">
+                            <div class="dropdown__icon">🛒</div>
+                            <div class="dropdown__info">
+                                <div class="dropdown__name">E-Grocery Modelling Tool</div>
+                                <div class="dropdown__desc">Financial modelling for e-grocery</div>
+                            </div>
+                        </a>
+                        <a href="https://kyc-flow-a.chernikov.tech/" target="_blank" class="dropdown__item">
+                            <div class="dropdown__icon">🪪</div>
+                            <div class="dropdown__info">
+                                <div class="dropdown__name">KYC Flow A</div>
+                                <div class="dropdown__desc">Know Your Customer verification flow</div>
+                            </div>
+                        </a>
+                        <a href="https://kyc-flow-b.chernikov.tech/yango-kyc-demo.html#flow" target="_blank" class="dropdown__item">
+                            <div class="dropdown__icon">🪪</div>
+                            <div class="dropdown__info">
+                                <div class="dropdown__name">KYC Flow B</div>
+                                <div class="dropdown__desc">Yango KYC verification demo</div>
+                            </div>
+                        </a>
+                        <div class="dropdown__item dropdown__item--disabled">
+                            <div class="dropdown__icon">🎙️</div>
+                            <div class="dropdown__info">
+                                <div class="dropdown__name">AI Voice Agent</div>
+                                <div class="dropdown__desc">Banking &amp; customer service</div>
+                            </div>
+                            <span class="dropdown__badge">Soon</span>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="https://linktr.ee/eechernikov" target="_blank">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <section class="hero" id="about">
+            <div class="hero__label">Dubai, UAE</div>
+            <h1 class="hero__name">Evgeny<br>Chernikov</h1>
+
+            <div class="contact-row">
+                <a href="mailto:eechernikov@yango.com" class="contact-btn contact-btn--primary" onclick="window.location.href=&#39;mailto:eechernikov@yango.com&#39;; return false;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                    Email
+                </a>
+                <a href="https://www.linkedin.com/in/echernikov/" target="_blank" class="contact-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                    LinkedIn
+                </a>
+                <a href="https://www.instagram.com/evgeny_chernikov/" target="_blank" class="contact-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    Instagram
+                </a>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section" id="focus" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+            <div class="section__header">
+                <h2 class="section__title">Focus Areas</h2>
+            </div>
+            <div class="focus-grid">
+                <div class="focus-card" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="focus-card__icon">🤖</div>
+                    <div class="focus-card__title">AI &amp; Data Infrastructure</div>
+                    <div class="focus-card__desc">Voice AI agents, LLM applications, data centers, and cloud infrastructure for enterprise</div>
+                </div>
+                <div class="focus-card" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="focus-card__icon">🏦</div>
+                    <div class="focus-card__title">Banking &amp; Fintech</div>
+                    <div class="focus-card__desc">Digital banking, payments infrastructure, and financial services technology</div>
+                </div>
+                <div class="focus-card" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="focus-card__icon">🏛️</div>
+                    <div class="focus-card__title">Government &amp; Public Sector</div>
+                    <div class="focus-card__desc">GovTech platforms, data infrastructure, and digital transformation</div>
+                </div>
+                <div class="focus-card" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="focus-card__icon">🛒</div>
+                    <div class="focus-card__title">Retail &amp; E-commerce</div>
+                    <div class="focus-card__desc">E-grocery, last-mile delivery, and omnichannel retail systems</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="section" id="solutions" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+            <div class="section__header">
+                <h2 class="section__title">Products &amp; Solutions Mock-ups</h2>
+                <span class="section__count">4 live · 1 soon</span>
+            </div>
+            <div class="demo-list">
+
+                <a href="https://zesco-demo.chernikov.tech/" target="_blank" class="demo-card" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="demo-card__left">
+                        <div class="demo-card__icon">⚡</div>
+                        <div class="demo-card__info">
+                            <div class="demo-card__name">ZESCO Demo</div>
+                            <div class="demo-card__desc">Utility management &amp; smart metering platform</div>
+                        </div>
+                    </div>
+                    <div class="demo-card__right">
+                        <span class="demo-card__tag">Utilities</span>
+                        <svg class="demo-card__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </div>
+                </a>
+
+                <a href="https://ultimate-e-grocery-modelling-tool.chernikov.tech/" target="_blank" class="demo-card" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="demo-card__left">
+                        <div class="demo-card__icon">🛒</div>
+                        <div class="demo-card__info">
+                            <div class="demo-card__name">Ultimate E-Grocery Modelling Tool</div>
+                            <div class="demo-card__desc">Financial modelling for e-grocery operations</div>
+                        </div>
+                    </div>
+                    <div class="demo-card__right">
+                        <span class="demo-card__tag">Retail</span>
+                        <svg class="demo-card__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </div>
+                </a>
+
+                <a href="https://kyc-flow-a.chernikov.tech/" target="_blank" class="demo-card" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="demo-card__left">
+                        <div class="demo-card__icon">🪪</div>
+                        <div class="demo-card__info">
+                            <div class="demo-card__name">KYC Flow A</div>
+                            <div class="demo-card__desc">Know Your Customer verification flow</div>
+                        </div>
+                    </div>
+                    <div class="demo-card__right">
+                        <span class="demo-card__tag">Fintech</span>
+                        <svg class="demo-card__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </div>
+                </a>
+
+                <a href="https://kyc-flow-b.chernikov.tech/yango-kyc-demo.html#flow" target="_blank" class="demo-card" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="demo-card__left">
+                        <div class="demo-card__icon">🪪</div>
+                        <div class="demo-card__info">
+                            <div class="demo-card__name">KYC Flow B</div>
+                            <div class="demo-card__desc">Yango KYC verification demo</div>
+                        </div>
+                    </div>
+                    <div class="demo-card__right">
+                        <span class="demo-card__tag">Fintech</span>
+                        <svg class="demo-card__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </div>
+                </a>
+
+                <div class="demo-card demo-card--disabled" style="opacity: 1; transform: translateY(0px); transition: opacity 0.6s, transform 0.6s;">
+                    <div class="demo-card__left">
+                        <div class="demo-card__icon">🎙️</div>
+                        <div class="demo-card__info">
+                            <div class="demo-card__name">AI Voice Agent Demo</div>
+                            <div class="demo-card__desc">Conversational AI for banking &amp; customer service</div>
+                        </div>
+                    </div>
+                    <div class="demo-card__right">
+                        <span class="demo-card__tag demo-card__tag--soon">Coming soon</span>
+                        <svg class="demo-card__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <footer>
+            <p>© 2026 Evgeny Chernikov · <a href="https://chernikov.tech/">chernikov.tech</a></p>
+        </footer>
+
+    </div>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.section, .focus-card, .demo-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(16px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            nav.style.padding = window.scrollY > 50 ? '10px 24px' : '16px 24px';
+        });
+    </script>
+
+<script defer="" src="./Evgeny Chernikov — chernikov.tech_files/v67327c56f0bb4ef8b305cae61679db8f1769101564043" integrity="sha512-rdcWY47ByXd76cbCFzznIcEaCN71jqkWBBqlwhF1SY7KubdLKZiEGeP7AyieKZlGP9hbY/MhGrwXzJC/HulNyg==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;2b2cbdecf75e4a3f8f18ba7e8bfc2cc8&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+
+</body></html>
